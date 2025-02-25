@@ -23,6 +23,7 @@ import {
   Bot,
   Target,
   Megaphone,
+  Star,
 } from "lucide-react";
 
 export function SiteHeader() {
@@ -41,6 +42,7 @@ export function SiteHeader() {
   const authenticatedMenuItems = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "Portfolio", href: "/portfolio", icon: Wallet },
+    { label: "Watchlist", href: "/watchlist", icon: Star },
     { label: "Launch", href: "/launch", icon: Rocket },
     { label: "AI Chatbot", href: "/chatbot", icon: Bot },
     { label: "Bet Management", href: "/bet-management", icon: Target },
