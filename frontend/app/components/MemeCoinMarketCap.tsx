@@ -36,6 +36,7 @@ type Coin = {
   volume24h: number;
   circulatingSupply: number;
   sparkline: number[];
+  logo: string;
 };
 
 const chains: Chain[] = [
@@ -106,6 +107,7 @@ const trendingCoins = [
     sparkline: [
       0.26, 0.25, 0.24, 0.25, 0.26, 0.25, 0.24, 0.23, 0.24, 0.25, 0.24, 0.245,
     ],
+    logo: "https://cryptologos.cc/logos/dogecoin-doge-logo.png",
   },
   {
     id: "shiba-inu",
@@ -122,6 +124,7 @@ const trendingCoins = [
       0.000016, 0.0000155, 0.0000158, 0.0000157, 0.0000156, 0.0000155,
       0.0000157, 0.0000156, 0.0000155, 0.0000158, 0.0000156, 0.00001558,
     ],
+    logo: "https://cryptologos.cc/logos/shiba-inu-shib-logo.png",
   },
   {
     id: "pepe",
@@ -138,6 +141,7 @@ const trendingCoins = [
       0.000098, 0.000096, 0.000095, 0.000097, 0.000096, 0.000094, 0.000095,
       0.000096, 0.000095, 0.000094, 0.000095, 0.00009562,
     ],
+    logo: "https://cryptologos.cc/logos/pepe-pepe-logo.png",
   },
   {
     id: "trump",
@@ -153,6 +157,7 @@ const trendingCoins = [
     sparkline: [
       18.5, 17.8, 17.2, 16.8, 16.5, 16.2, 16.4, 16.3, 16.5, 16.4, 16.45, 16.48,
     ],
+    logo: "https://s2.coinmarketcap.com/static/img/coins/64x64/24383.png",
   },
   {
     id: "bonk",
@@ -169,6 +174,7 @@ const trendingCoins = [
       0.0000165, 0.0000162, 0.0000161, 0.000016, 0.0000159, 0.0000161, 0.000016,
       0.0000161, 0.0000159, 0.000016, 0.0000161, 0.00001606,
     ],
+    logo: "https://cryptologos.cc/logos/bonk-bonk-logo.png",
   },
 ];
 
@@ -374,10 +380,24 @@ export function MemeCoinMarketCap({
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold">{coin.name}</span>
-                        <span className="text-gray-400 text-sm">
-                          {coin.symbol}
-                        </span>
+                        <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                          <img
+                            src={coin.logo}
+                            alt={`${coin.name} logo`}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              // Fallback if image fails to load
+                              (e.target as HTMLImageElement).src =
+                                "https://placehold.co/32x32?text=?";
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <span className="font-semibold">{coin.name}</span>
+                          <span className="text-gray-400 text-sm block">
+                            {coin.symbol}
+                          </span>
+                        </div>
                       </div>
                     </td>
                     <td className="text-right py-4 px-4">
