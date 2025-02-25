@@ -1,14 +1,15 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { SiteHeader } from "../components/site-header"
-import { PortfolioOverview } from "../portfolio/components/portfolio-overview"
-import { PortfolioChart } from "../portfolio/components/portfolio-chart"
-import { PortfolioAnalytics } from "../portfolio/components/portfolio-analytics"
-import { BetsSection } from "./components/bets-section"
-import { LaunchedTokens } from "./components/launched-tokens"
-import { MemeNews } from "./components/meme-news"
-import { AboutMemes } from "./components/about-memes"
+import { motion } from "framer-motion";
+import { SiteHeader } from "../components/site-header";
+import { SiteLeftbar } from "../components/site-leftbar";
+import { PortfolioOverview } from "../portfolio/components/portfolio-overview";
+import { PortfolioChart } from "../portfolio/components/portfolio-chart";
+import { PortfolioAnalytics } from "../portfolio/components/portfolio-analytics";
+import { BetsSection } from "./components/bets-section";
+import { LaunchedTokens } from "./components/launched-tokens";
+import { MemeNews } from "./components/meme-news";
+import { AboutMemes } from "./components/about-memes";
 
 export default function DashboardPage() {
   return (
@@ -16,11 +17,23 @@ export default function DashboardPage() {
       <SiteHeader />
 
       <div className="flex">
+        {/* Left Sidebar */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="fixed top-[64px] left-0 z-10"
+        >
+          <SiteLeftbar />
+        </motion.div>
+
         {/* Main Content */}
-        <main className="flex-1 px-4 pt-24 pb-16 pr-[400px]">
-          <h1 className="text-4xl font-bold mb-8">
+        <main className="flex-1 px-4 pt-20 pb-16 pl-[300px] pr-[400px]">
+          <h1 className="text-4xl font-bold mb-8 max-w-5xl mx-auto mt-6">
             Portfolio{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-500">Snapshot</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-500">
+              Snapshot
+            </span>
           </h1>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -79,6 +92,5 @@ export default function DashboardPage() {
         </motion.div>
       </div>
     </div>
-  )
+  );
 }
-

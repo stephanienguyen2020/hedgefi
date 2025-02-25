@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { SiteHeader } from "../components/site-header";
-import { Footer } from "../components/footer";
+import { Footer } from "../components/Footer";
 import GridBackground from "../components/GridBackground";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
