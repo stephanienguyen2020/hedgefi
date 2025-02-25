@@ -1,80 +1,88 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { SiteHeader } from "../components/site-header"
-import { Footer } from "../components/footer"
-import GridBackground from "../components/GridBackground"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Twitter, Github, Linkedin, ArrowRight } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
+import { motion } from "framer-motion";
+import { SiteHeader } from "../components/site-header";
+import { Footer } from "../components/footer";
+import GridBackground from "../components/GridBackground";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Twitter, Github, Linkedin, ArrowRight } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 const founders = [
   {
-    name: "Alex Thompson",
+    name: "Stephanie Ng.",
     role: "CEO & Co-Founder",
-    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/founder1-9CtIVDwF31CgvHZCL8GwzySvDqZBkk.webp",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/founder1-9CtIVDwF31CgvHZCL8GwzySvDqZBkk.webp",
     bio: "Former Binance executive with 10+ years in crypto. Led multiple successful DeFi projects.",
     twitter: "https://twitter.com",
     github: "https://github.com",
     linkedin: "https://linkedin.com",
   },
   {
-    name: "Sarah Chen",
+    name: "Gokul",
     role: "CTO & Co-Founder",
-    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/founder2-4K3e6I5QhgBXpTWEhvI7I5qXXtfIUE.webp",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/founder2-4K3e6I5QhgBXpTWEhvI7I5qXXtfIUE.webp",
     bio: "AI researcher and blockchain developer. Previously built trading algorithms at Jump Trading.",
     twitter: "https://twitter.com",
     github: "https://github.com",
     linkedin: "https://linkedin.com",
   },
   {
-    name: "Mike Rodriguez",
+    name: "Dylan Ng.",
     role: "Head of Product & Co-Founder",
-    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/founder3-DlPFrwUESPJjYSvtnOmuykB3LtDt0V.jpeg",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/founder3-DlPFrwUESPJjYSvtnOmuykB3LtDt0V.jpeg",
     bio: "Product leader with experience at Coinbase and FTX. Passionate about UX and accessibility.",
     twitter: "https://twitter.com",
     github: "https://github.com",
     linkedin: "https://linkedin.com",
   },
   {
-    name: "Emily Zhang",
+    name: "Daniel Dong",
     role: "Head of Research & Co-Founder",
-    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/founder4-mKXeebWUsUBtmoISgvglG97u44D3uK.png",
+    image:
+      "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/founder4-mKXeebWUsUBtmoISgvglG97u44D3uK.png",
     bio: "PhD in Machine Learning. Led research teams at DeepMind focusing on market prediction.",
     twitter: "https://twitter.com",
     github: "https://github.com",
     linkedin: "https://linkedin.com",
   },
-]
+];
 
 const stats = [
   { label: "Trading Volume", value: "$420M+" },
   { label: "Active Users", value: "50,000+" },
   { label: "Predictions Made", value: "1.2M+" },
   { label: "Success Rate", value: "76%" },
-]
+];
 
 const values = [
   {
     title: "Innovation First",
-    description: "Pushing the boundaries of what's possible with AI and blockchain technology.",
+    description:
+      "Pushing the boundaries of what's possible with AI and blockchain technology.",
   },
   {
     title: "Community Driven",
-    description: "Building and growing together with our passionate community of traders and developers.",
+    description:
+      "Building and growing together with our passionate community of traders and developers.",
   },
   {
     title: "Transparency",
-    description: "Operating with complete openness and accountability in everything we do.",
+    description:
+      "Operating with complete openness and accountability in everything we do.",
   },
   {
     title: "Security",
-    description: "Maintaining the highest standards of security to protect our users and their assets.",
+    description:
+      "Maintaining the highest standards of security to protect our users and their assets.",
   },
-]
+];
 
 export default function AboutPage() {
   return (
@@ -90,7 +98,10 @@ export default function AboutPage() {
             transition={{ duration: 0.5 }}
             className="text-center space-y-4"
           >
-            <Badge variant="outline" className="w-fit mx-auto bg-sky-500/10 text-sky-500 border-sky-500/20">
+            <Badge
+              variant="outline"
+              className="w-fit mx-auto bg-sky-500/10 text-sky-500 border-sky-500/20"
+            >
               About HedgeFi
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold">
@@ -100,9 +111,10 @@ export default function AboutPage() {
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              HedgeFi was founded in 2025 with a simple mission: to bring institutional-grade AI technology to meme coin
-              traders. We believe that everyone deserves access to sophisticated trading tools, regardless of their
-              experience level.
+              HedgeFi was founded in 2025 with a simple mission: to bring
+              institutional-grade AI technology to meme coin traders. We believe
+              that everyone deserves access to sophisticated trading tools,
+              regardless of their experience level.
             </p>
           </motion.div>
         </section>
@@ -116,7 +128,10 @@ export default function AboutPage() {
             className="grid grid-cols-2 md:grid-cols-4 gap-8"
           >
             {stats.map((stat, index) => (
-              <Card key={index} className="border-white/10 bg-black/60 backdrop-blur-xl">
+              <Card
+                key={index}
+                className="border-white/10 bg-black/60 backdrop-blur-xl"
+              >
                 <CardContent className="p-6">
                   <p className="text-3xl font-bold">{stat.value}</p>
                   <p className="text-muted-foreground">{stat.label}</p>
@@ -137,8 +152,9 @@ export default function AboutPage() {
             <div className="text-center space-y-4">
               <h2 className="text-3xl font-bold">Meet Our Team</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Our founders bring together decades of experience in cryptocurrency, artificial intelligence, and
-                decentralized finance.
+                Our founders bring together decades of experience in
+                cryptocurrency, artificial intelligence, and decentralized
+                finance.
               </p>
             </div>
 
@@ -164,7 +180,9 @@ export default function AboutPage() {
                         <h3 className="font-bold text-lg">{founder.name}</h3>
                         <p className="text-sm text-sky-400">{founder.role}</p>
                       </div>
-                      <p className="text-sm text-muted-foreground">{founder.bio}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {founder.bio}
+                      </p>
                       <div className="flex gap-4">
                         <Link href={founder.twitter} target="_blank">
                           <Button variant="ghost" size="icon">
@@ -201,7 +219,8 @@ export default function AboutPage() {
             <div className="text-center space-y-4">
               <h2 className="text-3xl font-bold">Our Values</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                The principles that guide us in building the future of decentralized finance.
+                The principles that guide us in building the future of
+                decentralized finance.
               </p>
             </div>
 
@@ -216,7 +235,9 @@ export default function AboutPage() {
                   <Card className="border-white/10 bg-black/60 backdrop-blur-xl">
                     <CardContent className="p-6">
                       <h3 className="font-bold text-lg mb-2">{value.title}</h3>
-                      <p className="text-muted-foreground">{value.description}</p>
+                      <p className="text-muted-foreground">
+                        {value.description}
+                      </p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -235,8 +256,8 @@ export default function AboutPage() {
           >
             <h2 className="text-3xl font-bold">Join Us on Our Mission</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              We're always looking for talented individuals who share our vision for the future of decentralized
-              finance.
+              We're always looking for talented individuals who share our vision
+              for the future of decentralized finance.
             </p>
             <Button className="gap-2">
               View Open Positions
@@ -247,6 +268,5 @@ export default function AboutPage() {
       </main>
       <Footer />
     </div>
-  )
+  );
 }
-
