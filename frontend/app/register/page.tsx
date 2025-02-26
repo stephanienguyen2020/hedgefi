@@ -7,38 +7,63 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Apple, Facebook, Github, Mail, Twitter } from "lucide-react"
 import { MetamaskFox } from "../components/icons/metamask-fox"
+import { ethers } from "ethers"
+import { useState } from "react"
 
 export default function Register() {
+  const [account, setAccount] = useState<string | null>(null)
+  const loginWithMetaMask = async () => {
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum)
+      const signer = await provider.getSigner()
+      const address = await signer.getAddress()
+
+      console.log("Connected address:", address)
+      setAccount(address)
+
+      const message = "Sign this message to verify your identity"
+      const signature = await signer.signMessage(message)
+      console.log("Signature:", signature)
+    } catch (error) {
+      console.error(error)
+    }
+  }
   const oauthProviders = [
     {
       name: "Google",
       icon: Mail,
       color: "hover:bg-red-500/10 hover:text-red-500 border-red-500/20",
+      onClick: () => console.log("Google login"),
     },
     {
       name: "Twitter",
       icon: Twitter,
       color: "hover:bg-blue-500/10 hover:text-blue-500 border-blue-500/20",
+      onClick: () => console.log("Twitter login"),
     },
     {
       name: "Apple",
       icon: Apple,
       color: "hover:bg-gray-500/10 hover:text-gray-300 border-gray-500/20",
+      onClick: () => console.log("Apple login"),
     },
     {
       name: "Github",
       icon: Github,
       color: "hover:bg-purple-500/10 hover:text-purple-500 border-purple-500/20",
+      onClick: () => console.log("GitHub login"),
     },
     {
       name: "Facebook",
       icon: Facebook,
       color: "hover:bg-blue-600/10 hover:text-blue-600 border-blue-600/20",
+      onClick: () => console.log("Facebook login"),
     },
     {
       name: "MetaMask",
       icon: MetamaskFox,
       color: "hover:bg-[#F6851B]/10 hover:text-[#F6851B] border-[#F6851B]/20",
+      onClick: loginWithMetaMask,
     },
   ]
 
@@ -64,6 +89,7 @@ export default function Register() {
                   key={provider.name}
                   variant="outline"
                   className={`h-14 relative overflow-hidden group ${provider.color}`}
+                  onClick={provider.onClick}
                 >
                   <div className="relative z-10 flex items-center justify-center gap-3 text-sm font-medium">
                     <provider.icon className="w-5 h-5" />
@@ -73,7 +99,13 @@ export default function Register() {
                 </Button>
               ))}
             </div>
-
+              {/* Show connected MetaMask account */}
+            {account && (
+              <div className="text-center text-sm text-green-500 mt-4">
+                Connected as: {account}
+              </div>
+            )}
+            
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
