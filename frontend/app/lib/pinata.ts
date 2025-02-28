@@ -1,6 +1,13 @@
 import { PinataSDK } from "pinata-web3";
 
-export const pinFileToIPFS = async (file) => {
+export const pinataImageUrl = "https://gateway.pinata.cloud/ipfs"
+
+export const pinata = new PinataSDK({
+    pinataJwt: `${process.env.REACT_APP_PINATA_JWT}`,
+    pinataGateway: `${process.env.REACT_APP_PUBLIC_PINATA_GATEWAY_URL}`
+  })
+
+export const pinFileToIPFS = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
     
@@ -20,7 +27,7 @@ export const pinFileToIPFS = async (file) => {
 };
 
 
-export const pinJSONToIPFS = async (json) => {
+export const pinJSONToIPFS = async (json: Record<string, any>) => {
     try {
         const response = await fetch("/api/pinata/pin/json", {
             method: "POST",
@@ -39,7 +46,7 @@ export const pinJSONToIPFS = async (json) => {
     }
 };
 
-export const unPinFromIPFS = async (hash) => {
+export const unPinFromIPFS = async (hash: string) => {
     try {
         const response = await fetch(`/api/pinata/unpin/${hash}`, {
             method: "DELETE",
@@ -59,9 +66,3 @@ export const unPinFromIPFS = async (hash) => {
     }
 };
 
-export const pinataImageUrl = "https://gateway.pinata.cloud/ipfs"
-
-export const pinata = new PinataSDK({
-    pinataJwt: `${process.env.REACT_APP_JWT}`,
-    pinataGateway: `${process.env.NEXT_PUBLIC_GATEWAY_URL}`
-  })
