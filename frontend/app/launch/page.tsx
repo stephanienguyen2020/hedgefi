@@ -26,6 +26,10 @@ import {
 } from "@/components/ui/dialog";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useWallet } from "../providers/WalletProvider";
+import { ethers } from "ethers";
+import Factory from "../abis/Factory.json";
+import {config} from "../config.js"
 
 interface TokenDetails {
   name: string;
@@ -69,6 +73,15 @@ export default function LaunchPage() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [createdToken, setCreatedToken] = useState<Token | null>(null);
   const addToken = useTokenStore((state) => state.addToken);
+
+  const { address, provider, chainId } = useWallet();
+  if (chainId === null) {
+    console.error("Chain ID is null. Please connect your wallet.");
+    return; 
+  } else {
+    const chainIdString = String(chainId);
+    const factory = new ethers.Contract(config[chainIdString].factory.address, Factory, provider)
+  }
 
   const handleImageSelect = (file: File) => {
     setError("");
@@ -241,8 +254,6 @@ export default function LaunchPage() {
     }));
   };
 
-  
-
   return (
     <AppLayout showFooter={false}>
       <GridBackground />
@@ -319,6 +330,13 @@ export default function LaunchPage() {
                       loadingAI={loadingAI}
                       isLoading={isLoading}
                       launchConfig={launchConfig}
+                      setUploading=
+                      provider= {provider}
+                      factory= factory
+                      fee=
+                      pinFileToIPFS=
+                      pinJSONToIPFS=
+                      unPinFromIPFS=
                       onImageSelect={handleImageSelect}
                       onClearImage={clearImage}
                       onPromptChange={setPrompt}

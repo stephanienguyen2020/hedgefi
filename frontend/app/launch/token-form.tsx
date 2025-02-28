@@ -62,6 +62,13 @@ interface TokenFormSectionProps {
   loadingAI: boolean
   isLoading: boolean
   launchConfig: LaunchConfig
+  setUploading: (uploading: boolean) => void
+  provider: any
+  factory: any
+  fee: any
+  pinFileToIPFS: (file: File) => Promise<string>
+  pinJSONToIPFS: (metadata: any) => Promise<string>
+  unPinFromIPFS: (hash: string) => Promise<void>
   onImageSelect: (file: File) => void
   onClearImage: () => void
   onPromptChange: (prompt: string) => void
@@ -81,6 +88,13 @@ export function TokenFormSection({
   loadingAI,
   isLoading,
   launchConfig,
+  setUploading,
+  provider,
+  factory,
+  fee,
+  pinFileToIPFS,
+  pinJSONToIPFS,
+  unPinFromIPFS,
   onImageSelect,
   onClearImage,
   onPromptChange,
@@ -88,6 +102,54 @@ export function TokenFormSection({
   onSubmit,
   onConfigChange,
 }: TokenFormSectionProps) {
+    
+    // launchx listHandler function
+    async function listHandler(event: React.FormEvent) {
+      setUploading(true);
+      event.preventDefault(); // prevent the form from reloading the page
+  
+      try {
+        // Get form data
+        const form = document.querySelector("form") as HTMLFormElement;
+        const formData = new FormData(form);
+        const tokenName = formData.get("name") as string;
+        const tokenSymbol = formData.get("symbol") as string;
+        const tokenDescription = formData.get("description") as string;
+        
+        console.log("Uploading File to IPFS", 'info', 1000);
+        const imageIpfsHash = await pinFileToIPFS(imageFile as File);
+  
+        const metaData = {
+          name: tokenName,
+          ticker: tokenSymbol,
+          description: tokenDescription,
+          initialSupply: launchConfig.initialSupply,
+          maxSupply: launchConfig.maxSupply,
+          liquidityPercentage: launchConfig.liquidityPercentage,
+          lockupPeriod: launchConfig.lockupPeriod,
+        };
+  
+        console.log("Uploading metadata to IPFS", 'info', 1000);
+        const metadataURI = await pinJSONToIPFS({ ...metaData, imageURI: imageIpfsHash });
+  
+        const signer = await provider.getSigner();
+        console.log("Signer Address:", await signer.getAddress());
+        const transaction = await factory.connect(signer).create(metaData.name, metaData.ticker, metadataURI, { value: fee });
+        const receipt = await transaction.wait();
+  
+        if (receipt.status === 1) {
+          setUploading(false);
+        } else {
+          await unPinFromIPFS(imageIpfsHash);
+          await unPinFromIPFS(metadataURI);
+          setUploading(false);
+        }
+      } catch (error) {
+        console.error("Error creating token:", error);
+        setUploading(false);
+      }
+    }
+
   const renderLaunchConfiguration = () => (
     <div>
       <h3 className="text-lg font-semibold mb-4">Launch Configuration</h3>
@@ -293,10 +355,7 @@ export function TokenFormSection({
 
       <div className="flex justify-center mb-8 mt-8">
         <Button
-          onClick={() => {
-            const form = document.querySelector("form") as HTMLFormElement
-            if (form) form.requestSubmit()
-          }}
+          onClick={listHandler}
           disabled={isLoading}
           size="lg"
           className="w-[calc(100%)] bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-400/90 hover:to-blue-500/90 text-primary-foreground"
