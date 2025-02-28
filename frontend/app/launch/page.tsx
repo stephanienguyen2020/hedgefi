@@ -197,6 +197,8 @@ export default function LaunchPage() {
     }));
   };
 
+  
+
   return (
     <AppLayout showFooter={false}>
       <GridBackground />
