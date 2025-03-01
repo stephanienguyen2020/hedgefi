@@ -29,7 +29,8 @@ import { Button } from "@/components/ui/button";
 import { useWallet } from "../providers/WalletProvider";
 import { ethers } from "ethers";
 import Factory from "../abis/Factory.json";
-import {config} from "../config.js"
+import { config } from "../config.js";
+import { pinFileToIPFS, pinJSONToIPFS, unPinFromIPFS } from "../lib/pinata";
 
 interface TokenDetails {
   name: string;
@@ -73,15 +74,49 @@ export default function LaunchPage() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [createdToken, setCreatedToken] = useState<Token | null>(null);
   const addToken = useTokenStore((state) => state.addToken);
+  const [uploading, setUploading] = useState(false);
 
   const { address, provider, chainId } = useWallet();
-  if (chainId === null) {
-    console.error("Chain ID is null. Please connect your wallet.");
-    return; 
-  } else {
+
+  // Initialize factory with a default value
+  let factory: ethers.Contract | null = null;
+  let fee = ethers.parseEther("0.1"); // Default fee - ethers v6 syntax
+
+  if (chainId !== null) {
     const chainIdString = String(chainId);
-    const factory = new ethers.Contract(config[chainIdString].factory.address, Factory, provider)
+    // Check if the chainId exists in the config
+    if (chainIdString in config) {
+      factory = new ethers.Contract(
+        config[chainIdString as keyof typeof config].factory.address,
+        Factory,
+        provider
+      );
+    } else {
+      console.error(`Chain ID ${chainIdString} not found in config`);
+    }
   }
+
+  // Wrapper functions to match the expected types for TokenFormSection
+  const pinFileWrapper = async (file: File): Promise<string> => {
+    const result = await pinFileToIPFS(file);
+    if (result === null) {
+      throw new Error("Failed to pin file to IPFS");
+    }
+    return result;
+  };
+
+  const pinJSONWrapper = async (metadata: any): Promise<string> => {
+    const result = await pinJSONToIPFS(metadata);
+    if (result === null) {
+      throw new Error("Failed to pin JSON to IPFS");
+    }
+    return result;
+  };
+
+  const unPinWrapper = async (hash: string): Promise<void> => {
+    await unPinFromIPFS(hash);
+    // Return void as expected
+  };
 
   const handleImageSelect = (file: File) => {
     setError("");
@@ -330,13 +365,13 @@ export default function LaunchPage() {
                       loadingAI={loadingAI}
                       isLoading={isLoading}
                       launchConfig={launchConfig}
-                      setUploading=
-                      provider= {provider}
-                      factory= factory
-                      fee=
-                      pinFileToIPFS=
-                      pinJSONToIPFS=
-                      unPinFromIPFS=
+                      setUploading={setUploading}
+                      provider={provider}
+                      factory={factory}
+                      fee={fee}
+                      pinFileToIPFS={pinFileWrapper}
+                      pinJSONToIPFS={pinJSONWrapper}
+                      unPinFromIPFS={unPinWrapper}
                       onImageSelect={handleImageSelect}
                       onClearImage={clearImage}
                       onPromptChange={setPrompt}
