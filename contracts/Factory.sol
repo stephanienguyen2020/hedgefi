@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.27;
+pragma solidity 0.8.28;
 
 import {Token} from "./Token.sol";
 import "./NativeLiquidityPool.sol";

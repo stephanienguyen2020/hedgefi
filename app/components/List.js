@@ -47,6 +47,7 @@ function List({ toggleCreate, fee, provider, factory }) {
       setUploading(false);
     }
   }
+
   return (
     <div className="list">
       <h2>List New Token</h2>
