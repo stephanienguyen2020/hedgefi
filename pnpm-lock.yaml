@@ -445,6 +445,9 @@ importers:
 
   packages/client-direct:
     dependencies:
+      '@elizaos-plugins/client-twitter':
+        specifier: workspace:*
+        version: link:../client-twitter
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core

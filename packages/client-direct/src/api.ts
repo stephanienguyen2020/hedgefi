@@ -1,5 +1,5 @@
 import express from "express";
-import { Router } from 'express';
+import { Router } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import path from "path";
@@ -19,6 +19,8 @@ import {
 // import { REST, Routes } from "discord.js";
 import type { DirectClient } from ".";
 import { validateUuid } from "@elizaos/core";
+
+import { TwitterPostClientInterface } from "@elizaos-plugins/client-twitter";
 
 interface UUIDParams {
     agentId: UUID;
@@ -68,6 +70,35 @@ export function createApiRouter(
 
     router.get("/", (req, res) => {
         res.send("Welcome, this is the REST API!");
+    });
+
+    router.post("/post-tweet/:agentId", async (req, res) => {
+        const { agentId } = validateUUIDParams(req.params, res) ?? {
+            agentId: null,
+        };
+        if (!agentId) return;
+        const agent = agents.get(agentId);
+
+        const coinSymbol = req.body.coinSymbol;
+        const coinName = req.body.coinName;
+        if (!agent) {
+            res.status(404).json({ error: "Agent not found" });
+            return;
+        }
+        try {
+            const twitterClient = await TwitterPostClientInterface.start(
+                agent,
+                coinSymbol,
+                coinName
+            );
+            if (!twitterClient) {
+                res.status(500).send("Failed to post with Twitter client");
+                return;
+            }
+            res.status(200).send("Tweet posted successfully");
+        } catch (error) {
+            res.status(500).send("Error posting tweet: " + error.message);
+        }
     });
 
     router.get("/hello", (req, res) => {
@@ -417,8 +448,9 @@ export function createApiRouter(
                     characterJson
                 );
             } else if (characterPath) {
-                character =
-                    await directClient.loadCharacterTryPath(characterPath);
+                character = await directClient.loadCharacterTryPath(
+                    characterPath
+                );
             } else {
                 throw new Error("No character path or JSON provided");
             }

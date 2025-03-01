@@ -1,7 +1,7 @@
 {
     "name": "Sage",
-    "plugins": ["@elizaos/plugin-news"],
-    "clients": [],
+    "plugins": ["@elizaos-plugins/client-twitter", "@elizaos/plugin-news"],
+    "clients": ["twitter"],
     "modelProvider": "openai",
     "settings": {
         "twitter": {

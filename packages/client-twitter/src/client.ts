@@ -1,4 +1,9 @@
-import { type Client, elizaLogger, type IAgentRuntime, type Plugin } from "@elizaos/core";
+import {
+    type Client,
+    elizaLogger,
+    type IAgentRuntime,
+    type Plugin,
+} from "@elizaos/core";
 import { ClientBase } from "./base.ts";
 import { validateTwitterConfig, type TwitterConfig } from "./environment.ts";
 import { TwitterInteractionClient } from "./interactions.ts";
@@ -53,10 +58,11 @@ class TwitterManager {
 }
 
 export const TwitterClientInterface: Client = {
-    name: 'twitter',
+    name: "twitter",
     async start(runtime: IAgentRuntime) {
-        const twitterConfig: TwitterConfig =
-            await validateTwitterConfig(runtime);
+        const twitterConfig: TwitterConfig = await validateTwitterConfig(
+            runtime
+        );
 
         elizaLogger.log("Twitter client started");
 
@@ -83,4 +89,32 @@ export const TwitterClientInterface: Client = {
 
         return manager;
     },
+};
+
+interface ShillClient extends Omit<Client, "start"> {
+    start(
+        runtime: IAgentRuntime,
+        coinName: string,
+        coinSymbol: string
+    ): Promise<unknown>;
+}
+
+export const TwitterPostClientInterface: ShillClient = {
+    async start(runtime: IAgentRuntime, coinName: string, coinSymbol: string) {
+        const twitterConfig: TwitterConfig = await validateTwitterConfig(
+            runtime
+        );
+
+        elizaLogger.log("Twitter client started");
+
+        const manager = new TwitterManager(runtime, twitterConfig);
+        // Initialize login/session
+        await manager.client.init();
+        // Generate and post a new tweet immediately
+        await manager.post.generateNewShillTweet(coinSymbol, coinName);
+
+        // Return the manager for potential future use
+        return manager;
+    },
+    name: "twitter-shill",
 };
