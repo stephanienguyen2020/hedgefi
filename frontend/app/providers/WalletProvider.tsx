@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 
 // Create context with additional methods
 interface WalletContextType extends WalletState {
-  connect: () => Promise<void>;
+  connect: (requireSignature?: boolean) => Promise<void>;
   disconnect: () => void;
   getContract: (address: string, abi: any) => Promise<ethers.Contract | null>;
   isMetaMaskInstalled: boolean;
@@ -39,8 +39,8 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
 
     if (isAuthenticated && isMetaMaskInstalled && !wallet.isConnected) {
-      // Try to reconnect silently
-      wallet.connect().catch((error) => {
+      // Try to reconnect silently without requiring signature
+      wallet.connect(false).catch((error) => {
         console.error("Failed to auto-connect wallet:", error);
       });
     }

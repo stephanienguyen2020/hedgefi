@@ -51,7 +51,7 @@ export default function Register() {
         return;
       }
 
-      await connect();
+      await connect(true);
 
       // Set registered state to show success message
       setIsRegistered(true);
