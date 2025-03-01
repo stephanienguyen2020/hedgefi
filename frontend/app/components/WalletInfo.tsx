@@ -26,7 +26,7 @@ export function WalletInfo() {
 
   const handleConnect = async () => {
     try {
-      await connect();
+      await connect(false);
     } catch (error) {
       console.error("Failed to connect wallet:", error);
     }

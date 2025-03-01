@@ -198,22 +198,39 @@ export default function LaunchPage() {
         imageUrl = "/placeholder.svg";
       }
 
+      // Prepare token data for API
+      const tokenData = {
+        name: data.name,
+        symbol: data.symbol,
+        description: data.description || "",
+        imageUrl: imageUrl,
+        initialSupply: launchConfig.initialSupply,
+        maxSupply: launchConfig.maxSupply,
+        launchCost: launchConfig.launchCost,
+        liquidityPercentage: launchConfig.liquidityPercentage,
+        lockupPeriod: launchConfig.lockupPeriod,
+        chain: data.chain || "ETH",
+      };
+
+      // Send token data to API
       const response = await fetch("/api/create-token", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...data,
-          imageUrl,
-        }),
+        body: JSON.stringify(tokenData),
       });
 
-      const tokenData = await response.json();
+      if (!response.ok) {
+        throw new Error("Failed to create token");
+      }
 
-      // Create a new token object
+      const responseData = await response.json();
+      console.log("API response:", responseData); // Debug log
+
+      // Create a new token object with the ID from the API response
       const newToken: Token = {
-        id: tokenData.id || Date.now().toString(),
+        id: responseData.id || Date.now().toString(),
         name: data.name,
         symbol: data.symbol,
         imageUrl, // Ensure imageUrl is set
@@ -234,6 +251,8 @@ export default function LaunchPage() {
       // Add token to store
       addToken(newToken);
       setCreatedToken(newToken);
+
+      // Explicitly set the success dialog to show
       setShowSuccessDialog(true);
     } catch (error) {
       console.error("Error creating token:", error);
@@ -429,6 +448,15 @@ export default function LaunchPage() {
                 }}
               >
                 View My Tokens
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowSuccessDialog(false);
+                  router.push(`/coins/${createdToken?.id}`);
+                }}
+              >
+                View Token Details
               </Button>
               <Button
                 onClick={() => {

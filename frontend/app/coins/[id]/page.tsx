@@ -35,6 +35,7 @@ import CoinsRightBar from "../components/CoinsRightBar";
 // import fetching top holders
 import { fetchTopHolders } from "@/app/lib/topHolder";
 import { fetchTokenInfo } from "@/app/lib/coins";
+import { fetchTokenById } from "@/app/lib/tokens";
 
 // Types for enhanced features
 type TimeRange = "5M" | "1H" | "4H" | "24H";
@@ -156,37 +157,63 @@ export default function CoinPage() {
     // Check authentication status on client side
     const fetchCoin = async () => {
       try {
-        const tokenInfo = await fetchTokenInfo(id as string);
-        console.log("tokenInfo", tokenInfo);
-        if (tokenInfo) {
+        // First try to fetch from our new API
+        const token = await fetchTokenById(id as string);
+
+        if (token) {
           // Convert API data to match our Coin type structure
           const apiCoin: Coin = {
             id: id as string,
-            name: tokenInfo.baseTokenName,
-            symbol: tokenInfo.baseTokenSymbol,
-            price: tokenInfo.currentPrice,
+            name: token.name,
+            symbol: token.symbol,
+            price: token.price,
             change1h: 0, // Not provided in API
-            change24h: tokenInfo.priceChange24hr,
+            change24h: token.priceChange || 0,
             change7d: 0, // Not provided in API
-            marketCap: tokenInfo.marketCap,
-            volume24h: tokenInfo.volume24hr,
-            liquidity: tokenInfo.liquidity,
-            circulatingSupply: tokenInfo.circulatingSupply, // Not provided in API
+            marketCap: token.marketCap,
+            volume24h: token.volume24h,
+            liquidity: token.liquidityPercentage * 10000, // Convert percentage to value
+            circulatingSupply: token.circulatingSupply || 1000000, // Default if not provided
             sparkline: [], // Not provided in API
-            logo: tokenInfo.baseTokenImageUrl,
+            logo: token.imageUrl,
           };
-          
+
           setCoinData(apiCoin);
           setLoading(false);
         } else {
-          // Fallback to mock data if API returns nothing
-          setLoading(false);
+          // Fallback to the old API if our new one fails
+          const tokenInfo = await fetchTokenInfo(id as string);
+          console.log("tokenInfo", tokenInfo);
+          if (tokenInfo) {
+            // Convert API data to match our Coin type structure
+            const apiCoin: Coin = {
+              id: id as string,
+              name: tokenInfo.baseTokenName,
+              symbol: tokenInfo.baseTokenSymbol,
+              price: tokenInfo.currentPrice,
+              change1h: 0, // Not provided in API
+              change24h: tokenInfo.priceChange24hr,
+              change7d: 0, // Not provided in API
+              marketCap: tokenInfo.marketCap,
+              volume24h: tokenInfo.volume24hr,
+              liquidity: tokenInfo.liquidity,
+              circulatingSupply: 1000000, // Default value since not provided in API
+              sparkline: [], // Not provided in API
+              logo: tokenInfo.baseTokenImageUrl,
+            };
+
+            setCoinData(apiCoin);
+            setLoading(false);
+          } else {
+            // Fallback to mock data if API returns nothing
+            setLoading(false);
+          }
         }
       } catch (error) {
         console.error("Error fetching token info:", error);
         setLoading(false);
       }
-    }
+    };
     const savedAuth = localStorage.getItem("isAuthenticated");
     setIsAuthenticated(savedAuth === "true");
 

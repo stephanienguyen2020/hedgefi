@@ -14,7 +14,7 @@ export interface WalletState {
 }
 
 interface WalletStore extends WalletState {
-  connect: () => Promise<void>;
+  connect: (requireSignature?: boolean) => Promise<void>;
   disconnect: () => void;
   updateWallet: (wallet: Partial<WalletState>) => void;
   getContract: (address: string, abi: any) => Promise<ethers.Contract | null>;
@@ -34,7 +34,7 @@ export const useWalletStore = create<WalletStore>()(
       isAuthenticated: false,
 
       // Connect wallet
-      connect: async () => {
+      connect: async (requireSignature = false) => {
         try {
           if (typeof window === "undefined" || !window.ethereum) {
             throw new Error("MetaMask not installed");
@@ -84,10 +84,19 @@ export const useWalletStore = create<WalletStore>()(
           const balanceWei = await provider.getBalance(address);
           const balance = ethers.formatEther(balanceWei);
 
-          // Sign message for authentication
-          const message = "Sign this message to verify your identity";
-          const signature = await signer.signMessage(message);
-          console.log("Signature:", signature);
+          // Only sign message if explicitly required
+          let isAuthenticated = false;
+          if (requireSignature) {
+            // Sign message for authentication
+            const message = "Sign this message to verify your identity";
+            const signature = await signer.signMessage(message);
+            console.log("Signature:", signature);
+            isAuthenticated = true;
+          } else {
+            // If we already have authentication status in localStorage, use that
+            isAuthenticated =
+              localStorage.getItem("isAuthenticated") === "true";
+          }
 
           // Update state
           set({
@@ -98,12 +107,14 @@ export const useWalletStore = create<WalletStore>()(
             chainId,
             networkName,
             balance,
-            isAuthenticated: true,
+            isAuthenticated,
           });
 
           // Save to localStorage for persistence
-          localStorage.setItem("isAuthenticated", "true");
-          localStorage.setItem("userAddress", address);
+          if (isAuthenticated) {
+            localStorage.setItem("isAuthenticated", "true");
+            localStorage.setItem("userAddress", address);
+          }
 
           // Setup event listeners for account and chain changes
           window.ethereum.on("accountsChanged", (accounts: string[]) => {
@@ -111,14 +122,14 @@ export const useWalletStore = create<WalletStore>()(
               // User disconnected their wallet
               get().disconnect();
             } else {
-              // User switched accounts, reconnect
-              get().connect();
+              // User switched accounts, reconnect without requiring signature
+              get().connect(false);
             }
           });
 
           window.ethereum.on("chainChanged", () => {
-            // Chain changed, reconnect to get new chain info
-            get().connect();
+            // Chain changed, reconnect to get new chain info without requiring signature
+            get().connect(false);
           });
         } catch (error) {
           console.error("Error connecting wallet:", error);
