@@ -1,11 +1,17 @@
 import { ethers } from "ethers"
 import { useState } from "react"
 import { pinFileToIPFS, pinJSONToIPFS, unPinFromIPFS } from "../config/pinata";
+import Factory from "../abis/Factory.json"
+import { CONTRACT_ADDRESSES } from "../config/contracts_addresses";
+
 function List({ toggleCreate, fee, provider, factory }) {
   const [image, setImage] = useState(null)
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false)
   const [metaData, setMetaData] = useState({})
+  
+  // const { address } = useAccount();
+  // const { data: walletClient } = useWalletClient();
 
   function handleFormChange(event){
     event.preventDefault();
@@ -34,8 +40,21 @@ function List({ toggleCreate, fee, provider, factory }) {
 
     const signer = await provider.getSigner();
     console.log("Signer Address:", await signer.getAddress()); 
-    const transaction = await factory.connect(signer).create(metaData.name, metaData.ticker, metadataURI, {value: fee})
-    const receipt = await transaction.wait()
+    
+    const contract = new ethers.Contract(
+      CONTRACT_ADDRESSES.TOKEN_FACTORY,
+      Factory,
+      signer
+    );
+
+    const tx = await contract.connect(signer).create(
+      metaData.name,
+      metaData.ticker,
+      metadataURI,
+      {value: fee} 
+    );
+
+    const receipt = await tx.wait();
 
     if (receipt.status === 1) {
       setUploading(false);
