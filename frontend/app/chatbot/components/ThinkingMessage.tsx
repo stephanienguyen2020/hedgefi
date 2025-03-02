@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
-import ThinkingDots from "./ThinkingDots";
+import { ThinkingDots } from "@/components/ui/thinking-dots";
 
 export default function ThinkingMessage() {
   return (
@@ -13,12 +13,6 @@ export default function ThinkingMessage() {
       animate={{ opacity: 1, y: 0 }}
       className={cn("flex gap-3", "items-start")}
     >
-      <Avatar>
-        <AvatarImage src="/hedgefi-bot.png" />
-        <AvatarFallback>
-          <Bot className="h-5 w-5" />
-        </AvatarFallback>
-      </Avatar>
       <div className={cn("flex flex-col gap-2", "items-start")}>
         <div
           className={cn(

@@ -32,7 +32,17 @@ import { sendChatMessage } from "../service";
 import { ChatSwapInterface } from "./ChatSwapInterface/index";
 import type { Message, SwapMessageContent } from "@/types/chat";
 
-import type { Content, UUID } from "@elizaos/core";
+// Define local types to avoid dependency on @elizaos/core
+type UUID = string;
+type Content = {
+  text: string;
+  attachments?: Array<{
+    url: string;
+    contentType: string;
+    title: string;
+  }>;
+};
+
 import { apiClient } from "@/app/lib/chat";
 
 import {
@@ -214,6 +224,24 @@ function AIChatbotContent() {
       setShowFollowUpActions(true);
     },
     onError: (e) => {
+      // Remove the thinking message on error
+      queryClient.setQueryData(
+        ["messages", agentId],
+        (old: ContentWithUser[] = []) => old.filter((msg) => !msg.isLoading)
+      );
+
+      // Add an error message
+      const errorMessage = {
+        text: `Sorry, I encountered an error: ${e.message}. Please try again.`,
+        user: "Sage",
+        createdAt: Date.now(),
+      };
+
+      queryClient.setQueryData(
+        ["messages", agentId],
+        (old: ContentWithUser[] = []) => [...old, errorMessage]
+      );
+
       toast({
         variant: "destructive",
         title: "Unable to send message",
@@ -565,9 +593,8 @@ function AIChatbotContent() {
                         <ThinkingMessage />
                       ) : (
                         <div className="text-sm whitespace-pre-wrap">
-                        {renderMessageContent(message)}
-                      </div>
-            
+                          {renderMessageContent(message)}
+                        </div>
                       )
                     ) : (
                       <div className="text-sm whitespace-pre-wrap">

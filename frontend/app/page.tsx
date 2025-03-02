@@ -218,8 +218,8 @@ export default function Home(): JSX.Element {
               href="#"
               className="inline-flex items-center rounded-full bg-muted px-4 py-1.5 text-sm font-medium"
             >
-              🎉 <Separator className="mx-2 h-4" orientation="vertical" />{" "}
-              Introducing HedgeFi
+              🎉 <Separator className="mx-2 h-4" orientation="vertical" /> The
+              Ultimate MemeCoin Factory on NEAR & Aurora
             </motion.a>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -227,10 +227,10 @@ export default function Home(): JSX.Element {
               transition={{ delay: 0.4 }}
               className="text-4xl font-bold leading-tight tracking-tighter md:text-6xl lg:text-7xl lg:leading-[1.1]"
             >
-              We See the Future,
+              Build, Trade, Bet, Dominate.
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-500">
-                So You Don't Have to Sell a Kidney
+                Only on NEAR & Aurora.
               </span>
             </motion.h1>
             <motion.span
@@ -239,8 +239,10 @@ export default function Home(): JSX.Element {
               transition={{ delay: 0.5 }}
               className="max-w-[750px] text-center text-lg text-muted-foreground sm:text-xl"
             >
-              Your AI-powered crystal ball for meme coins. Predict trends, spot
-              rugs, and catch moonshots before they happen.
+              AI-powered insights to predict trends, dodge rugs, and catch
+              moonshots before they take off—mint, swap, trade, and bet in the
+              largest decentralized launchpad, marketplace, and prediction
+              market for viral meme coins.
             </motion.span>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -270,7 +272,7 @@ export default function Home(): JSX.Element {
           </div>
         </section>
 
-        <Separator className="my-12" />
+        {/* <Separator className="my-12" />
 
         <div className="container">
           <h2 className="mb-8 text-3xl font-bold">
@@ -279,7 +281,7 @@ export default function Home(): JSX.Element {
             </span>
           </h2>
           <MemeCoinMarketCap />
-        </div>
+        </div> */}
       </div>
     </AppLayout>
   );
