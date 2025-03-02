@@ -118,6 +118,29 @@ Examples of bet requests:
 # INSTRUCTIONS: Respond with [RESPOND] if this is a request to create a bet, or [IGNORE] if it is not.
 ` + shouldRespondFooter;
 
+export const twitterBetResponseTemplate =
+    `
+# INSTRUCTIONS: Extract the details of the bet from the conversation.
+
+Current Post:
+{{currentPost}}
+
+Analyze the conversation to identify:
+1. What is being bet on (the event/outcome)
+2. The possible outcomes
+3. Any specific odds or amounts mentioned
+4. Who is involved in the bet
+5. Any time constraints or deadlines
+
+Example bet descriptions:
+- "Betting on the Lakers vs Warriors game tonight, Lakers to win"
+- "Presidential election outcome in November, Biden vs Trump"
+- "World Cup final winner, odds at 2:1"
+
+# INSTRUCTIONS: Respond with:
+[Bet description in 1-2 sentences]
+` + messageCompletionFooter;
+
 export class TwitterInteractionClient {
     client: ClientBase;
     runtime: IAgentRuntime;
@@ -156,8 +179,7 @@ export class TwitterInteractionClient {
 
             elizaLogger.log(
                 "Completed checking mentioned tweets:",
-                mentionCandidates.length,
-                mentionCandidates
+                mentionCandidates.length
             );
             let uniqueTweetCandidates = [...mentionCandidates];
             // Only process target users if configured
@@ -474,6 +496,68 @@ export class TwitterInteractionClient {
 
         if (isBetRequestResponse === "RESPOND") {
             elizaLogger.log("Bet request detected, creating bet");
+            const betContext = composeContext({
+                state,
+                template: twitterBetResponseTemplate,
+            });
+            elizaLogger.log("Bet context", betContext);
+            const betResponse = await generateMessageResponse({
+                runtime: this.runtime,
+                context: betContext,
+                modelClass: ModelClass.SMALL,
+            });
+            elizaLogger.log("Bet init");
+            elizaLogger.log("Bet response", betResponse.text);
+            try {
+                // Use fixed small values that ethers can handle
+                const joinAmountWei = "4000000000000"; // 0.000004 ETH in wei (fixed value)
+                const initialPoolAmountWei = "4000000000000"; // 0.000004 ETH in wei (fixed value)
+
+                elizaLogger.log(
+                    `Creating bet with joinAmount: 0.000004 ETH, initialPoolAmount: 0.000004 ETH`
+                );
+
+                const response = await fetch(
+                    "http://localhost:3000/api/bets/create-for-user",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            twitterHandle: tweet.username,
+                            title: betResponse.text,
+                            description: betResponse.text,
+                            category: "Twitter Bet",
+                            endDate: Math.floor(Date.now() / 1000) + 604800, // 7 days from now
+                            amount: joinAmountWei,
+                            initialPoolAmount: initialPoolAmountWei,
+                            imageURL: "/placeholder.svg",
+                        }),
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Failed to create bet: ${response.statusText}`
+                    );
+                }
+                const responseContent = {
+                    text: "Bet created. Please visit the link to join: http://localhost:3000/bets",
+                    action: "NONE",
+                };
+                await sendTweet(
+                    this.client,
+                    responseContent,
+                    message.roomId,
+                    this.client.twitterConfig.TWITTER_USERNAME,
+                    tweetId || tweet.id
+                );
+                elizaLogger.log("Successfully created bet");
+                return { text: "Bet created", action: "CREATE_BET" };
+            } catch (error) {
+                elizaLogger.error("Error creating bet:", error);
+            }
         }
 
         const shouldRespond = await generateShouldRespond({
