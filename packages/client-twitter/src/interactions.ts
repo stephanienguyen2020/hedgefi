@@ -59,7 +59,49 @@ Here is the current post text again. Remember to include an action if the curren
 {{currentPost}}
 Here is the descriptions of images in the Current post.
 {{imageDescriptions}}
+
+Please visit http://localhost:3000/bets to view your bets
 ` + messageCompletionFooter;
+
+const betResponseTemplate = `# Areas of Expertise
+{{knowledge}}
+
+# About {{agentName}} (@{{twitterUserName}}):
+{{bio}}
+{{lore}}
+{{topics}}
+
+{{providers}}
+
+{{characterPostExamples}}
+
+{{postDirections}}
+
+Recent interactions between {{agentName}} and other users:
+{{recentPostInteractions}}
+
+{{recentPosts}}
+
+# TASK: Generate a post/reply in the voice, style and perspective of {{agentName}} (@{{twitterUserName}}) while using the thread of tweets as additional context:
+
+Current Post:
+{{currentPost}}
+Here is the descriptions of images in the Current post.
+{{imageDescriptions}}
+
+Thread of Tweets You Are Replying To:
+{{formattedConversation}}
+
+# INSTRUCTIONS: Generate a post in the voice, style and perspective of {{agentName}} (@{{twitterUserName}}). You MUST include an action if the current post text includes a prompt that is similar to one of the available actions mentioned here:
+{{actionNames}}
+{{actions}}
+
+Here is the current post text again. Remember to include an action if the current post text includes a prompt that asks for one of the available actions mentioned above (does not need to be exact)
+{{currentPost}}
+Here is the descriptions of images in the Current post.
+{{imageDescriptions}}
+
+Please visit http://localhost:3000/bets to view your bets`;
 
 export const twitterShouldRespondTemplate = (targetUsersStr: string) =>
     `# INSTRUCTIONS: Determine if {{agentName}} (@{{twitterUserName}}) should respond to the message and participate in the conversation. Do not comment. Just respond with "true" or "false".
@@ -517,7 +559,7 @@ export class TwitterInteractionClient {
                     `Creating bet with joinAmount: 0.000004 ETH, initialPoolAmount: 0.000004 ETH`
                 );
 
-                const response = await fetch(
+                const res = await fetch(
                     "http://localhost:3000/api/bets/create-for-user",
                     {
                         method: "POST",
@@ -525,7 +567,7 @@ export class TwitterInteractionClient {
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                            twitterHandle: tweet.username,
+                            twitterHandle: "example_user",
                             title: betResponse.text,
                             description: betResponse.text,
                             category: "Twitter Bet",
@@ -537,24 +579,11 @@ export class TwitterInteractionClient {
                     }
                 );
 
-                if (!response.ok) {
-                    throw new Error(
-                        `Failed to create bet: ${response.statusText}`
-                    );
+                if (!res.ok) {
+                    throw new Error(`Failed to create bet: ${res.statusText}`);
                 }
-                const responseContent = {
-                    text: "Bet created. Please visit the link to join: http://localhost:3000/bets",
-                    action: "NONE",
-                };
-                await sendTweet(
-                    this.client,
-                    responseContent,
-                    message.roomId,
-                    this.client.twitterConfig.TWITTER_USERNAME,
-                    tweetId || tweet.id
-                );
+
                 elizaLogger.log("Successfully created bet");
-                return { text: "Bet created", action: "CREATE_BET" };
             } catch (error) {
                 elizaLogger.error("Error creating bet:", error);
             }
@@ -571,7 +600,6 @@ export class TwitterInteractionClient {
             elizaLogger.log("Not responding to message");
             return { text: "Response Decision:", action: shouldRespond };
         }
-
         const context = composeContext({
             state: {
                 ...state,
@@ -621,6 +649,9 @@ export class TwitterInteractionClient {
         response.inReplyTo = stringId;
 
         response.text = removeQuotes(response.text);
+        response.text =
+            response.text +
+            "\n\nPlease visit http://localhost:3000/bets to view your bets";
 
         if (response.text) {
             if (this.isDryRun) {
