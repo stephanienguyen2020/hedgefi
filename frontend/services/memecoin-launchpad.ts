@@ -2,8 +2,8 @@ import { ethers, BrowserProvider, Contract, Signer } from "ethers";
 import { pinFileToIPFS, pinJSONToIPFS, unPinFromIPFS } from "@/app/lib/pinata";
 import Factory from "../abi/Factory.json";
 import NativeLiquidityPool from "../abi/NativeLiquidityPool.json";
+import Token from "../abi/Token.json";
 import { config } from "../app/config/contract_addresses";
-
 // Define TypeScript interfaces
 interface TokenSale {
   token: string;
@@ -73,16 +73,24 @@ async function loadFactoryContract(): Promise<ContractObjects> {
  */
 export async function swapEthForToken(
   token: TokenSale,
-  amount: bigint
+  amount: Number
 ): Promise<{ success: boolean }> {
+  console.log(amount);
   try {
-    console.log(
-      "Simulating ETH to token swap:",
-      token.token,
-      amount.toString()
-    );
+    const { signer, liquidityPool } = await loadFactoryContract();
+    const ethAmountEthers = ethers.parseUnits(amount.toString(), 18);
+    console.log("ethAmountEthers", ethAmountEthers);
+    console.log("token.isOpen", token.isOpen);
+    if (token.isOpen === true) {
+      return { success: false };
+    }
+    
+    const transaction = await liquidityPool
+      .connect(signer)
+      .swapEthForToken(token.token, { value: ethAmountEthers });
 
-    return { success: true };
+    const receipt = await transaction.wait();
+    return { success: receipt.status === 1 };
   } catch (error) {
     console.error("Error swapping ETH for token:", error);
     return { success: true };
@@ -94,16 +102,29 @@ export async function swapEthForToken(
  */
 export async function swapTokenForEth(
   tokenSale: TokenSale,
-  tokenAmount: bigint
+  tokenAmount: Number
 ): Promise<{ success: boolean }> {
   try {
-    console.log(
-      "Simulating token to ETH swap:",
-      tokenSale.token,
-      tokenAmount.toString()
-    );
+    const { signer, liquidityPool } = await loadFactoryContract();
+    const tokenAmountEthers = ethers.parseUnits(tokenAmount.toString(), 18);
+    if (tokenSale.isOpen === true) {
+      return { success: false };
+    }
 
-    return { success: true };
+    const tokenContract = new ethers.Contract(
+      tokenSale.token,
+      Token,
+      signer
+    );
+    await tokenContract.approve(await liquidityPool.getAddress(), tokenAmountEthers);
+    console.log("ethAmountEthers", tokenAmountEthers);
+    console.log("token.isOpen", tokenSale.isOpen);
+    const transaction = await liquidityPool
+      .connect(signer)
+      .swapTokenForEth(tokenSale.token, tokenAmountEthers);
+
+    const receipt = await transaction.wait();
+    return { success: receipt.status === 1 };
   } catch (error) {
     console.error("Error swapping token for ETH:", error);
     return { success: true };
@@ -312,7 +333,6 @@ export async function getPriceForTokens(tokenSale: TokenSale, amount: bigint) {
     amountInWei < MIN_AMOUNT ||
     amountInWei > CAP_AMOUNT
   ) {
-    // console.error("Error: Amount is out of bounds or sale is closed.");
     return 0;
   }
 
