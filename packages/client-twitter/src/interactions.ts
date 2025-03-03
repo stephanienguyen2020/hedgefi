@@ -567,7 +567,7 @@ export class TwitterInteractionClient {
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                            twitterHandle: "example_user",
+                            twitterHandle: tweet.username,
                             title: betResponse.text,
                             description: betResponse.text,
                             category: "Twitter Bet",
@@ -583,7 +583,11 @@ export class TwitterInteractionClient {
                     throw new Error(`Failed to create bet: ${res.statusText}`);
                 }
 
+                const betData = await res.json();
                 elizaLogger.log("Successfully created bet");
+                console.log("betData", betData);
+                // Store the bet URL for later use
+                state.betUrl = betData.redirectUrl;
             } catch (error) {
                 elizaLogger.error("Error creating bet:", error);
             }
@@ -648,10 +652,15 @@ export class TwitterInteractionClient {
 
         response.inReplyTo = stringId;
 
-        response.text = removeQuotes(response.text);
-        response.text =
-            response.text +
-            "\n\nPlease visit http://localhost:3000/bets to view your bets";
+        // Override response text with custom bet creation message if we have a bet URL
+        if (state.betUrl) {
+            response.text = `Hey @${tweet.username}, bet created successfully! View and place your bet here: ${state.betUrl}`;
+        } else {
+            response.text = removeQuotes(response.text);
+        }
+
+        // Remove the URL section completely - we don't need it in every response
+        // Only bet-specific responses will have their URLs
 
         if (response.text) {
             if (this.isDryRun) {
