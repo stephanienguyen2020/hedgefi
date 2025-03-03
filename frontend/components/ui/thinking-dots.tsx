@@ -9,10 +9,14 @@ export function ThinkingDots() {
         if (prev.length >= 3) return "";
         return prev + ".";
       });
-    }, 500);
+    }, 300); // Faster animation
 
     return () => clearInterval(interval);
   }, []);
 
-  return <span className="inline-block ml-1">{dots}</span>;
+  return (
+    <span className="inline-block ml-1 min-w-[20px] text-blue-400 font-bold">
+      {dots}
+    </span>
+  );
 }

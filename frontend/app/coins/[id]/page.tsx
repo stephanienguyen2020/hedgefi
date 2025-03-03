@@ -226,12 +226,16 @@ export default function CoinPage() {
 
       <div className="flex flex-1 pt-16">
         {/* Show sidebar when authenticated */}
-        {isAuthenticated && <SiteLeftbar />}
+        {isAuthenticated && (
+          <div className="fixed top-16 left-0 bottom-0 z-40 w-[280px]">
+            <SiteLeftbar />
+          </div>
+        )}
 
         <main
-          className={`flex-1 overflow-y-auto ${
-            isAuthenticated ? "ml-0 md:ml-[280px]" : ""
-          } ${coinData ? "pr-0 lg:pr-[500px]" : ""}`}
+          className={`flex-1 ${isAuthenticated ? "ml-0 md:ml-[280px]" : ""} ${
+            coinData ? "pr-0 lg:pr-[500px]" : ""
+          }`}
         >
           <div className="container p-4">
             {loading ? (

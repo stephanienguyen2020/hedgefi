@@ -16,6 +16,8 @@ import { AutoShillModal } from "./auto-shill-modal";
 import { TradeModal } from "./trade-modal";
 import { useRouter } from "next/navigation";
 
+import { autoShill } from "@/app/lib/chat";
+
 interface Asset {
   id: string;
   symbol: string;
@@ -239,13 +241,14 @@ export function AssetTable({ searchQuery }: AssetTableProps) {
       asset.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAutoShill = (asset: Asset) => {
+  const handleAutoShill = async (asset: Asset) => {
     setSelectedAsset(asset);
     setIsShillModalOpen(true);
+    await autoShill(asset, "c3bd776c-4465-037f-9c7a-bf94dfba78d9");
   };
 
   return (
-    <Card className="border-white/10 bg-black/60 backdrop-blur-xl overflow-hidden">
+    <Card className="overflow-hidden border-white/10 bg-black/60 backdrop-blur-xl">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -269,7 +272,7 @@ export function AssetTable({ searchQuery }: AssetTableProps) {
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10">
+                    <div className="w-8 h-8 overflow-hidden rounded-full bg-white/10">
                       <Image
                         src={getCoinLogo(asset.symbol) || "/placeholder.svg"}
                         alt={asset.name}
@@ -280,7 +283,7 @@ export function AssetTable({ searchQuery }: AssetTableProps) {
                     <div>
                       <div className="font-medium">
                         <span
-                          className="font-semibold cursor-pointer hover:text-blue-500 transition-colors"
+                          className="font-semibold transition-colors cursor-pointer hover:text-blue-500"
                           onClick={() => router.push(`/coins/${asset.id}`)}
                         >
                           {asset.name}
@@ -288,7 +291,7 @@ export function AssetTable({ searchQuery }: AssetTableProps) {
                       </div>
                       <div className="text-sm text-muted-foreground">
                         <span
-                          className="text-gray-400 text-sm block cursor-pointer hover:text-blue-500 transition-colors"
+                          className="block text-sm text-gray-400 transition-colors cursor-pointer hover:text-blue-500"
                           onClick={() => router.push(`/coins/${asset.id}`)}
                         >
                           {asset.symbol}
@@ -360,25 +363,25 @@ export function AssetTable({ searchQuery }: AssetTableProps) {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
+                          <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>
-                          <LineChart className="mr-2 h-4 w-4" />
+                          <LineChart className="w-4 h-4 mr-2" />
                           View Chart
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                          <History className="mr-2 h-4 w-4" />
+                          <History className="w-4 h-4 mr-2" />
                           Transaction History
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                          <Share2 className="mr-2 h-4 w-4" />
+                          <Share2 className="w-4 h-4 mr-2" />
                           Share
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-red-500">
-                          <Trash2 className="mr-2 h-4 w-4" />
+                          <Trash2 className="w-4 h-4 mr-2" />
                           Remove
                         </DropdownMenuItem>
                       </DropdownMenuContent>

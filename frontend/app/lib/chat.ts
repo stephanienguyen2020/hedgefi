@@ -1,7 +1,15 @@
-import type { UUID, Character } from "@elizaos/core";
+// Define local types to avoid dependency on @elizaos/core
+type UUID = string;
+type Character = {
+  id: string;
+  name: string;
+  // Add other properties as needed
+};
 
-const BASE_URL = process.env.NEXT_PUBLIC_AGENT_SERVER;
-console.log(BASE_URL);
+const BASE_URL =
+  process.env.NEXT_PUBLIC_AGENT_SERVER || "http://localhost:3001"; // Add fallback URL
+console.log("API Base URL:", BASE_URL);
+
 const fetcher = async ({
   url,
   method,
@@ -39,15 +47,17 @@ const fetcher = async ({
     }
   }
 
-  return fetch(`${BASE_URL}${url}`, options).then(async (resp) => {
-    const contentType = resp.headers.get("Content-Type");
+  try {
+    const response = await fetch(`${BASE_URL}${url}`, options);
+    const contentType = response.headers.get("Content-Type");
+
     if (contentType === "audio/mpeg") {
-      return await resp.blob();
+      return await response.blob();
     }
 
-    if (!resp.ok) {
-      const errorText = await resp.text();
-      console.error("Error: ", errorText);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API Error: ", errorText);
 
       let errorMessage = "An error occurred.";
       try {
@@ -60,8 +70,15 @@ const fetcher = async ({
       throw new Error(errorMessage);
     }
 
-    return resp.json();
-  });
+    return response.json();
+  } catch (error) {
+    console.error("Network or API Error:", error);
+    // Add more descriptive error for debugging
+    if (error instanceof Error) {
+      throw new Error(`API request failed: ${error.message}`);
+    }
+    throw new Error("API request failed with an unknown error");
+  }
 };
 
 export const apiClient = {
@@ -77,6 +94,24 @@ export const apiClient = {
     if (selectedFile) {
       formData.append("file", selectedFile);
     }
+
+    // Check if we're in development mode and the API server is not available
+    if (process.env.NODE_ENV === "development" && !BASE_URL) {
+      console.log("Using mock response for development");
+      // Return a mock response after a short delay
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve([
+            {
+              text: `I received your message: "${message}"\n\nThis is a mock response since the API server is not available. Please configure NEXT_PUBLIC_AGENT_SERVER in your environment variables.`,
+              user: "Sage",
+              createdAt: Date.now(),
+            },
+          ]);
+        }, 1500);
+      });
+    }
+
     return fetcher({
       url: `/${agentId}/message`,
       method: "POST",

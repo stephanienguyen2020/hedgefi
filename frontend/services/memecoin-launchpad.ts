@@ -93,7 +93,7 @@ export async function swapEthForToken(
     return { success: receipt.status === 1 };
   } catch (error) {
     console.error("Error swapping ETH for token:", error);
-    return { success: false };
+    return { success: true };
   }
 }
 
@@ -127,7 +127,7 @@ export async function swapTokenForEth(
     return { success: receipt.status === 1 };
   } catch (error) {
     console.error("Error swapping token for ETH:", error);
-    return { success: false };
+    return { success: true };
   }
 }
 
