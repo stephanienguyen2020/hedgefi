@@ -534,34 +534,20 @@ const CoinSwap = ({
         handleTradeAction();
       }
 
-      // Set transaction hash and show success dialog
+      // Generate a mock transaction hash (in a real app, this would come from the blockchain)
+      const mockTxHash =
+        "0xf79DcD66e8bC69dae488c3E0F35e069381" +
+        Math.floor(Math.random() * 1000000)
+          .toString(16)
+          .padStart(6, "0");
       setTransactionHash(mockTxHash);
       setShowSuccess(true);
 
       // Update balances after successful swap
       updateBalancesAfterSwap();
     } catch (error) {
-      // MODIFIED: Even if there's an error, still show success
       console.error("Error during swap:", error);
-
-      // Generate a mock transaction hash
-      const mockTxHash =
-        "0xf79DcD66e8bC69dae488c3E0F35e069381" +
-        Math.floor(Math.random() * 1000000)
-          .toString(16)
-          .padStart(6, "0");
-
-      // Call the trade action handler if provided
-      if (handleTradeAction) {
-        handleTradeAction();
-      }
-
-      // Set transaction hash and show success dialog
-      setTransactionHash(mockTxHash);
-      setShowSuccess(true);
-
-      // Update balances after successful swap
-      updateBalancesAfterSwap();
+      alert("An error occurred during the swap. Please try again.");
     }
   };
 
@@ -571,7 +557,7 @@ const CoinSwap = ({
 
     try {
       // Fetch updated balances
-      const ethBalanceWei = await getEthBalance().catch(() => BigInt(0));
+      const ethBalanceWei = await getEthBalance();
       const formattedEthBalance = ethers.formatEther(ethBalanceWei);
       setEthBalance(formattedEthBalance);
 
@@ -581,81 +567,44 @@ const CoinSwap = ({
         ethToken.balance = parseFloat(formattedEthBalance);
       }
 
-      // Update token balances if applicable
-      if (swapDirection === "ethToToken" && toToken.tokenData) {
-        // Update the balance of the token we received
-        const tokenBalanceWei = await getTokenBalance(
-          toToken.tokenData.token
-        ).catch(() => BigInt(0));
-        const formattedBalance = ethers.formatEther(tokenBalanceWei);
+      // If we swapped a token, update its balance
+      if (swapDirection === "tokenToEth" && fromToken.tokenData) {
+        const tokenBalance = await getTokenBalance(fromToken.tokenData.token);
+        const formattedBalance = ethers.formatEther(tokenBalance);
 
-        // Find and update the token in our tokens array
-        const token = tokens.find(
-          (t) => t.tokenData && t.tokenData.token === toToken.tokenData!.token
+        // Update the balance in our state
+        setTokenBalances((prev) => ({
+          ...prev,
+          [fromToken.tokenData!.token]: formattedBalance,
+        }));
+
+        // Update the token in the tokens array
+        const token = marketplaceTokensFormatted.find(
+          (t) => t.tokenData && t.tokenData.token === fromToken.tokenData!.token
         );
         if (token) {
           token.balance = parseFloat(formattedBalance);
         }
-      } else if (swapDirection === "tokenToEth" && fromToken.tokenData) {
-        // Update the balance of the token we sent
-        const tokenBalanceWei = await getTokenBalance(
-          fromToken.tokenData.token
-        ).catch(() => BigInt(0));
-        const formattedBalance = ethers.formatEther(tokenBalanceWei);
+      } else if (swapDirection === "ethToToken" && toToken.tokenData) {
+        const tokenBalance = await getTokenBalance(toToken.tokenData.token);
+        const formattedBalance = ethers.formatEther(tokenBalance);
 
-        // Find and update the token in our tokens array
-        const token = tokens.find(
-          (t) => t.tokenData && t.tokenData.token === fromToken.tokenData!.token
+        // Update the balance in our state
+        setTokenBalances((prev) => ({
+          ...prev,
+          [toToken.tokenData!.token]: formattedBalance,
+        }));
+
+        // Update the token in the tokens array
+        const token = marketplaceTokensFormatted.find(
+          (t) => t.tokenData && t.tokenData.token === toToken.tokenData!.token
         );
         if (token) {
           token.balance = parseFloat(formattedBalance);
         }
       }
     } catch (error) {
-      // Just log the error but don't alert the user - we want to ensure the success dialog shows
       console.error("Error updating balances after swap:", error);
-
-      // Simulate updated balances with mock values
-      if (swapDirection === "ethToToken") {
-        // Decrease ETH balance by the amount swapped
-        const ethToken = tokens.find((t) => t.symbol === "ETH");
-        if (ethToken) {
-          ethToken.balance = Math.max(
-            0,
-            ethToken.balance - parseFloat(fromAmount)
-          );
-        }
-
-        // Increase token balance
-        if (toToken.tokenData) {
-          const token = tokens.find(
-            (t) => t.tokenData && t.tokenData.token === toToken.tokenData!.token
-          );
-          if (token) {
-            token.balance = (token.balance || 0) + parseFloat(toAmount);
-          }
-        }
-      } else if (swapDirection === "tokenToEth") {
-        // Increase ETH balance
-        const ethToken = tokens.find((t) => t.symbol === "ETH");
-        if (ethToken) {
-          ethToken.balance = ethToken.balance + parseFloat(toAmount);
-        }
-
-        // Decrease token balance
-        if (fromToken.tokenData) {
-          const token = tokens.find(
-            (t) =>
-              t.tokenData && t.tokenData.token === fromToken.tokenData!.token
-          );
-          if (token) {
-            token.balance = Math.max(
-              0,
-              (token.balance || 0) - parseFloat(fromAmount)
-            );
-          }
-        }
-      }
     }
   };
 
@@ -665,14 +614,14 @@ const CoinSwap = ({
         <CardContent className="p-6">
           {!showSuccess ? (
             <>
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex justify-between items-center mb-6">
                 <Button
                   variant="ghost"
                   size="icon"
                   className="rounded-full bg-[#2A2B2E] text-gray-400 hover:text-green-400"
                   onClick={() => setShowSettings(!showSettings)}
                 >
-                  <Settings2 className="w-5 h-5" />
+                  <Settings2 className="h-5 w-5" />
                 </Button>
 
                 <h2 className="text-xl font-bold text-white">Exchange</h2>
@@ -682,11 +631,11 @@ const CoinSwap = ({
                   size="icon"
                   className="rounded-full bg-[#2A2B2E] text-gray-400 hover:text-green-400"
                 >
-                  <Share2 className="w-5 h-5" />
+                  <Share2 className="h-5 w-5" />
                 </Button>
               </div>
 
-              <div className="flex items-start p-3 mb-4 text-sm text-blue-400 border rounded-md bg-blue-500/10 border-blue-500/20">
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-md p-3 mb-4 text-sm text-blue-400 flex items-start">
                 <Info className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
                 <div>
                   <strong>Note:</strong> Only graduated tokens (where isOpen =
@@ -696,14 +645,14 @@ const CoinSwap = ({
               </div>
 
               {!isAuthenticated && (
-                <div className="flex items-start p-3 mb-4 text-sm text-yellow-400 border rounded-md bg-yellow-500/10 border-yellow-500/20">
+                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-md p-3 mb-4 text-sm text-yellow-400 flex items-start">
                   <Info className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
                     <strong>Wallet not connected:</strong> Please connect your
                     wallet to view your balances and make trades.
                   </div>
                   <Button
-                    className="ml-2 text-black bg-yellow-500 hover:bg-yellow-600"
+                    className="ml-2 bg-yellow-500 hover:bg-yellow-600 text-black"
                     onClick={() => {
                       if (window.ethereum) {
                         window.ethereum
@@ -728,7 +677,7 @@ const CoinSwap = ({
               )}
 
               {isLoadingBalances && isAuthenticated && (
-                <div className="flex items-start p-3 mb-4 text-sm text-green-400 border rounded-md bg-green-500/10 border-green-500/20">
+                <div className="bg-green-500/10 border border-green-500/20 rounded-md p-3 mb-4 text-sm text-green-400 flex items-start">
                   <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-green-400 mr-2 mt-0.5"></div>
                   <div>
                     <strong>Loading balances:</strong> Please wait while we
@@ -748,7 +697,7 @@ const CoinSwap = ({
                     }`}
                     onClick={() => setOrderType("instant")}
                   >
-                    <Zap className="w-4 h-4" />
+                    <Zap className="h-4 w-4" />
                     Instant
                   </button>
                   <button
@@ -759,7 +708,7 @@ const CoinSwap = ({
                     }`}
                     onClick={() => setOrderType("limit")}
                   >
-                    <Clock className="w-4 h-4" />
+                    <Clock className="h-4 w-4" />
                     Limit
                   </button>
                 </div>
@@ -794,32 +743,32 @@ const CoinSwap = ({
                           className="h-12 px-3 bg-[#353538] hover:bg-[#404043] rounded-xl flex items-center gap-2"
                         >
                           <span className="text-xl">{fromToken.icon}</span>
-                          <span className="font-medium text-white">
+                          <span className="text-white font-medium">
                             {fromToken.symbol}
                           </span>
-                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                          <ChevronDown className="h-4 w-4 text-gray-400" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-64 p-0 bg-[#1A1B1E] border-[#353538]">
                         <div className="p-2">
                           <div className="flex items-center border border-[#353538] rounded-md bg-[#2A2B2E]">
-                            <Search className="w-4 h-4 ml-2 text-gray-400" />
+                            <Search className="h-4 w-4 ml-2 text-gray-400" />
                             <Input
                               placeholder="Search tokens..."
                               value={fromSearchQuery}
                               onChange={(e) =>
                                 setFromSearchQuery(e.target.value)
                               }
-                              className="bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                              className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                             />
                             {fromSearchQuery && (
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="w-6 h-6 p-0 mr-1"
+                                className="h-6 w-6 p-0 mr-1"
                                 onClick={() => setFromSearchQuery("")}
                               >
-                                <X className="w-3 h-3" />
+                                <X className="h-3 w-3" />
                               </Button>
                             )}
                           </div>
@@ -911,13 +860,13 @@ const CoinSwap = ({
                       </PopoverContent>
                     </Popover>
 
-                    <div className="relative flex-1">
+                    <div className="flex-1 relative">
                       <Input
                         type="text"
                         placeholder="0.0"
                         value={fromAmount}
                         onChange={(e) => handleFromAmountChange(e.target.value)}
-                        className="p-0 pr-16 text-xl text-right text-white bg-transparent border-none focus-visible:ring-0"
+                        className="bg-transparent border-none text-right text-xl text-white focus-visible:ring-0 p-0 pr-16"
                       />
                       <Button
                         variant="outline"
@@ -929,7 +878,7 @@ const CoinSwap = ({
                       </Button>
                     </div>
                   </div>
-                  <div className="mt-1 text-sm text-right text-gray-400">
+                  <div className="text-right text-sm text-gray-400 mt-1">
                     ≈ ${fromUsdValue.toFixed(2)}
                   </div>
                 </div>
@@ -942,7 +891,7 @@ const CoinSwap = ({
                     className="absolute -top-2 z-10 rounded-xl bg-[#2A2B2E] border border-[#353538] hover:bg-[#353538]"
                     onClick={handleSwapTokens}
                   >
-                    <ArrowUpDown className="w-4 h-4" />
+                    <ArrowUpDown className="h-4 w-4" />
                   </Button>
                 </div>
 
@@ -974,30 +923,30 @@ const CoinSwap = ({
                           className="h-12 px-3 bg-[#353538] hover:bg-[#404043] rounded-xl flex items-center gap-2"
                         >
                           <span className="text-xl">{toToken.icon}</span>
-                          <span className="font-medium text-white">
+                          <span className="text-white font-medium">
                             {toToken.symbol}
                           </span>
-                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                          <ChevronDown className="h-4 w-4 text-gray-400" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-64 p-0 bg-[#1A1B1E] border-[#353538]">
                         <div className="p-2">
                           <div className="flex items-center border border-[#353538] rounded-md bg-[#2A2B2E]">
-                            <Search className="w-4 h-4 ml-2 text-gray-400" />
+                            <Search className="h-4 w-4 ml-2 text-gray-400" />
                             <Input
                               placeholder="Search tokens..."
                               value={toSearchQuery}
                               onChange={(e) => setToSearchQuery(e.target.value)}
-                              className="bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                              className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                             />
                             {toSearchQuery && (
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="w-6 h-6 p-0 mr-1"
+                                className="h-6 w-6 p-0 mr-1"
                                 onClick={() => setToSearchQuery("")}
                               >
-                                <X className="w-3 h-3" />
+                                <X className="h-3 w-3" />
                               </Button>
                             )}
                           </div>
@@ -1094,10 +1043,10 @@ const CoinSwap = ({
                       placeholder="0.0"
                       value={toAmount}
                       onChange={(e) => handleToAmountChange(e.target.value)}
-                      className="flex-1 p-0 text-xl text-right text-white bg-transparent border-none focus-visible:ring-0"
+                      className="bg-transparent border-none text-right text-xl text-white focus-visible:ring-0 p-0 flex-1"
                     />
                   </div>
-                  <div className="mt-1 text-sm text-right text-gray-400">
+                  <div className="text-right text-sm text-gray-400 mt-1">
                     ≈ ${toUsdValue.toFixed(2)}
                   </div>
                 </div>
@@ -1105,12 +1054,12 @@ const CoinSwap = ({
                 {/* Transaction Details */}
                 <div className="bg-[#2A2B2E] rounded-xl p-4 space-y-3">
                   {/* Price Info */}
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex justify-between items-center text-sm">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center gap-1 text-gray-400 cursor-help">
-                            Price <Info className="w-4 h-4" />
+                          <div className="text-gray-400 flex items-center gap-1 cursor-help">
+                            Price <Info className="h-4 w-4" />
                           </div>
                         </TooltipTrigger>
                         <TooltipContent className="bg-[#1A1B1E] border-[#353538]">
@@ -1124,7 +1073,7 @@ const CoinSwap = ({
                   </div>
 
                   {/* Recipient Address */}
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex justify-between items-center text-sm">
                     <div className="text-gray-400">Recipient Address</div>
                     <div className="flex items-center gap-2">
                       <span className="text-gray-300 text-sm truncate max-w-[180px]">
@@ -1137,12 +1086,12 @@ const CoinSwap = ({
                   </div>
 
                   {/* Transaction Cost */}
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex justify-between items-center text-sm">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center gap-1 text-gray-400 cursor-help">
-                            Transaction cost <Info className="w-4 h-4" />
+                          <div className="text-gray-400 flex items-center gap-1 cursor-help">
+                            Transaction cost <Info className="h-4 w-4" />
                           </div>
                         </TooltipTrigger>
                         <TooltipContent className="bg-[#1A1B1E] border-[#353538]">
@@ -1158,12 +1107,12 @@ const CoinSwap = ({
                   </div>
 
                   {/* Slippage Settings */}
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex justify-between items-center text-sm">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center gap-1 text-gray-400 cursor-help">
-                            Slippage Tolerance <Info className="w-4 h-4" />
+                          <div className="text-gray-400 flex items-center gap-1 cursor-help">
+                            Slippage Tolerance <Info className="h-4 w-4" />
                           </div>
                         </TooltipTrigger>
                         <TooltipContent className="bg-[#1A1B1E] border-[#353538]">
@@ -1193,25 +1142,25 @@ const CoinSwap = ({
                   </div>
 
                   {/* Gas on destination */}
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex justify-between items-center text-sm">
                     <div className="text-gray-400">Gas on destination</div>
                     <div className="text-gray-300">{gasOnDestination}</div>
                   </div>
 
                   {/* Fee */}
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex justify-between items-center text-sm">
                     <div className="text-gray-400">Fee</div>
                     <div className="text-gray-300">{fee}</div>
                   </div>
 
                   {/* Gas cost */}
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex justify-between items-center text-sm">
                     <div className="text-gray-400">Gas cost</div>
                     <div className="text-gray-300">{gasCost}</div>
                   </div>
 
                   {/* Estimated time for transfer */}
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex justify-between items-center text-sm">
                     <div className="text-gray-400">
                       Estimated time for transfer
                     </div>
@@ -1219,12 +1168,12 @@ const CoinSwap = ({
                   </div>
 
                   {fromAmount && parseFloat(fromAmount) > 0 && (
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex justify-between items-center text-sm">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1 text-gray-400 cursor-help">
-                              Minimum Received <Info className="w-4 h-4" />
+                            <div className="text-gray-400 flex items-center gap-1 cursor-help">
+                              Minimum Received <Info className="h-4 w-4" />
                             </div>
                           </TooltipTrigger>
                           <TooltipContent className="bg-[#1A1B1E] border-[#353538]">
@@ -1244,7 +1193,7 @@ const CoinSwap = ({
 
                 {/* Swap Button */}
                 <Button
-                  className="w-full mt-4 text-lg font-medium text-white bg-blue-600 h-14 hover:bg-blue-700 rounded-xl"
+                  className="w-full h-14 text-lg font-medium mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
                   onClick={
                     !isAuthenticated
                       ? () => {
@@ -1295,13 +1244,13 @@ const CoinSwap = ({
             </>
           ) : (
             // Success View (in-component instead of modal)
-            <div className="flex flex-col items-center py-4 space-y-6 text-center">
+            <div className="flex flex-col items-center text-center space-y-6 py-4">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-r from-yellow-400 via-green-400 to-green-500"
+                className="w-20 h-20 rounded-full bg-gradient-to-r from-yellow-400 via-green-400 to-green-500 flex items-center justify-center"
               >
-                <Check className="w-10 h-10 text-black" />
+                <Check className="h-10 w-10 text-black" />
               </motion.div>
               <div className="space-y-2">
                 <h2 className="text-2xl font-medium text-white">
@@ -1312,24 +1261,24 @@ const CoinSwap = ({
                 </p>
               </div>
 
-              <div className="w-full space-y-4">
+              <div className="space-y-4 w-full">
                 {/* Transaction Details */}
-                <div className="w-full space-y-3">
+                <div className="space-y-3 w-full">
                   {/* Transaction Hash */}
                   <div className="bg-[#2A2B2E] rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2 text-sm">
+                    <div className="flex justify-between items-center text-sm mb-2">
                       <span className="text-gray-400">Transaction Hash</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="mr-2 text-sm text-gray-300 truncate">
+                      <span className="text-gray-300 text-sm truncate mr-2">
                         {transactionHash}
                       </span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-auto p-1 text-gray-400 hover:text-white"
+                        className="text-gray-400 hover:text-white p-1 h-auto"
                       >
-                        <Copy className="w-4 h-4" />
+                        <Copy className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -1337,7 +1286,7 @@ const CoinSwap = ({
                   {/* Additional Transaction Details */}
                   <div className="bg-[#2A2B2E] rounded-xl p-4 space-y-3">
                     {/* Recipient Address */}
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex justify-between items-center text-sm">
                       <div className="text-gray-400">Recipient Address</div>
                       <div className="flex items-center gap-2">
                         <span className="text-gray-300 text-sm truncate max-w-[180px]">
@@ -1349,7 +1298,7 @@ const CoinSwap = ({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-auto p-1 text-gray-400 hover:text-white"
+                          className="text-gray-400 hover:text-white p-1 h-auto"
                         >
                           Edit
                         </Button>
@@ -1357,31 +1306,31 @@ const CoinSwap = ({
                     </div>
 
                     {/* Slippage */}
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex justify-between items-center text-sm">
                       <div className="text-gray-400">Slippage</div>
                       <div className="text-gray-300">{slippage}%</div>
                     </div>
 
                     {/* Gas on destination */}
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex justify-between items-center text-sm">
                       <div className="text-gray-400">Gas on destination</div>
                       <div className="text-gray-300">{gasOnDestination}</div>
                     </div>
 
                     {/* Fee */}
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex justify-between items-center text-sm">
                       <div className="text-gray-400">Fee</div>
                       <div className="text-gray-300">{fee}</div>
                     </div>
 
                     {/* Gas cost */}
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex justify-between items-center text-sm">
                       <div className="text-gray-400">Gas cost</div>
                       <div className="text-gray-300">{gasCost}</div>
                     </div>
 
                     {/* Estimated time for transfer */}
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex justify-between items-center text-sm">
                       <div className="text-gray-400">
                         Estimated time for transfer
                       </div>
@@ -1390,16 +1339,16 @@ const CoinSwap = ({
                   </div>
                 </div>
 
-                <div className="flex w-full gap-3">
+                <div className="flex gap-3 w-full">
                   <Button
                     variant="ghost"
                     className="flex-1 text-gray-400 hover:text-white"
                   >
-                    View in Explorer <ExternalLink className="w-4 h-4 ml-2" />
+                    View in Explorer <ExternalLink className="ml-2 h-4 w-4" />
                   </Button>
 
                   <Button
-                    className="flex-1 text-white bg-blue-600 hover:bg-blue-700"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                     onClick={() => setShowSuccess(false)}
                   >
                     New Swap
