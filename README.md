@@ -8,8 +8,18 @@ Connect wallets easily with secure authentication—no private key management re
 ### **Dashboard & Portfolio Tracking**
 Monitor holdings in real-time, track profits/losses, and get AI-driven price predictions.
 
-### **🛠 Betting Marketplace**
-Bet on meme coin trends directly via Twitter by tagging **@HedgeFi**. Smart contracts ensure secure escrow and instant payouts.
+### **🛠 Betting Marketplace** 
+- **Tweet Your Bet**  
+   - Tag **@HedgeFi** and specify your prediction  
+     - Example: `"I bet $100 that $DOGE will be up 10% by next Friday! @HedgeFi"`  
+-  **Smart Contract Escrow**  
+   - HedgeFi’s smart contract locks the bet amount securely.  
+-  **Matching & Verification**  
+   - The system matches your bet with another user or a market maker.  
+-  **Automatic Payouts**  
+   - After the bet period ends, the contract verifies the outcome and pays out instantly.
+-  **Friendly & Easy-to-Use UI**
+   - Easy to navigate the whole bet process.
 
 ### **🚀 Meme Coin Launch Pad**
 Launch your own token with an AI-powered branding assistant, instant deployment, and on-chain security.
