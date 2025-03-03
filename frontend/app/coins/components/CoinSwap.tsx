@@ -486,7 +486,7 @@ const CoinSwap = ({
 
     try {
       // Convert amount to BigInt for the API calls
-      const amount = ethers.parseUnits(fromAmount, 18);
+      const amount = Number(fromAmount);
       let result;
 
       if (swapDirection === "ethToToken" && toToken.tokenData) {

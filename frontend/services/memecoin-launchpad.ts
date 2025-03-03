@@ -2,8 +2,8 @@ import { ethers, BrowserProvider, Contract, Signer } from "ethers";
 import { pinFileToIPFS, pinJSONToIPFS, unPinFromIPFS } from "@/app/lib/pinata";
 import Factory from "../abi/Factory.json";
 import NativeLiquidityPool from "../abi/NativeLiquidityPool.json";
+import Token from "../abi/Token.json";
 import { config } from "../app/config/contract_addresses";
-
 // Define TypeScript interfaces
 interface TokenSale {
   token: string;
@@ -73,8 +73,9 @@ async function loadFactoryContract(): Promise<ContractObjects> {
  */
 export async function swapEthForToken(
   token: TokenSale,
-  amount: bigint
+  amount: Number
 ): Promise<{ success: boolean }> {
+  console.log(amount);
   try {
     const { signer, liquidityPool } = await loadFactoryContract();
     const ethAmountEthers = ethers.parseUnits(amount.toString(), 18);
@@ -84,7 +85,6 @@ export async function swapEthForToken(
       return { success: false };
     }
     
-
     const transaction = await liquidityPool
       .connect(signer)
       .swapEthForToken(token.token, { value: ethAmountEthers });
@@ -102,7 +102,7 @@ export async function swapEthForToken(
  */
 export async function swapTokenForEth(
   tokenSale: TokenSale,
-  tokenAmount: bigint
+  tokenAmount: Number
 ): Promise<{ success: boolean }> {
   try {
     const { signer, liquidityPool } = await loadFactoryContract();
@@ -111,6 +111,14 @@ export async function swapTokenForEth(
       return { success: false };
     }
 
+    const tokenContract = new ethers.Contract(
+      tokenSale.token,
+      Token,
+      signer
+    );
+    await tokenContract.approve(await liquidityPool.getAddress(), tokenAmountEthers);
+    console.log("ethAmountEthers", tokenAmountEthers);
+    console.log("token.isOpen", tokenSale.isOpen);
     const transaction = await liquidityPool
       .connect(signer)
       .swapTokenForEth(tokenSale.token, tokenAmountEthers);
