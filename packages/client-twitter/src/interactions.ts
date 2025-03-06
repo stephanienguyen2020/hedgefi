@@ -183,6 +183,56 @@ Example bet descriptions:
 [Bet description in 1-2 sentences]
 ` + messageCompletionFooter;
 
+export const twitterCreateTokenShouldRespondTemplate =
+    `# INSTRUCTIONS: Determine if this is a request to create a token.
+
+Current Post:
+{{currentPost}}
+
+Thread Context:
+{{formattedConversation}}
+
+Check if the message:
+1. Contains phrases like "launch a token", "create a token", "make a token"
+2. Includes a description or theme for the token
+3. Tags @{{twitterUserName}} requesting token creation
+4. Mentions meme tokens or token launches
+
+Examples of token creation requests:
+- "Hey @{{twitterUserName}} launch a token based on this meme"
+- "@{{twitterUserName}} create a token about cats"
+- "Can you make a token with this joke @{{twitterUserName}}"
+- "@{{twitterUserName}} let's launch a token about AI"
+
+# INSTRUCTIONS: Respond with [RESPOND] if this is a request to create a token, or [IGNORE] if it is not.
+` + shouldRespondFooter;
+
+export const twitterCreateTokenResponseTemplate =
+    `# INSTRUCTIONS: Extract the details of the token from the conversation.
+
+Current Post:
+{{currentPost}}
+
+Thread Context:
+{{formattedConversation}}
+
+Analyze the conversation to identify:
+1. The theme or concept for the token
+2. Any specific features or utilities mentioned
+3. The target community or audience
+4. Any suggested tokenomics or distribution
+5. Branding elements or meme references
+
+Example token descriptions:
+- "AI-powered meme token with community governance"
+- "Cat-themed token with charity donations to shelters"
+- "Gaming token with in-game utility and rewards"
+- "Web3 social token for content creators"
+
+# INSTRUCTIONS: Respond with:
+[Token launch description in 1-2 sentences]
+` + messageCompletionFooter;
+
 export class TwitterInteractionClient {
     client: ClientBase;
     runtime: IAgentRuntime;
@@ -535,6 +585,32 @@ export class TwitterInteractionClient {
             context: isBetRequest,
             modelClass: ModelClass.MEDIUM,
         });
+
+        const isTokenRequest = composeContext({
+            state,
+            template: twitterCreateTokenShouldRespondTemplate,
+        });
+
+        const isTokenRequestResponse = await generateShouldRespond({
+            runtime: this.runtime,
+            context: isTokenRequest,
+            modelClass: ModelClass.MEDIUM,
+        });
+
+        if (isTokenRequestResponse === "RESPOND") {
+            elizaLogger.log("Token request detected, creating token");
+            const tokenContext = composeContext({
+                state,
+                template: twitterCreateTokenResponseTemplate,
+            });
+            
+            const tokenResponse = await generateMessageResponse({
+                runtime: this.runtime,
+                context: tokenContext,
+                modelClass: ModelClass.MEDIUM,
+            });
+            elizaLogger.log("Token response", tokenResponse.text);
+        }
 
         if (isBetRequestResponse === "RESPOND") {
             elizaLogger.log("Bet request detected, creating bet");
