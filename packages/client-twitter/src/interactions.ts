@@ -230,7 +230,7 @@ Example token descriptions:
 - "Web3 social token for content creators"
 
 # INSTRUCTIONS: Respond with:
-[Token launch description in 1-2 sentences]
+[Make a joke about the token in 1-2 sentences]
 ` + messageCompletionFooter;
 
 export class TwitterInteractionClient {
@@ -603,13 +603,65 @@ export class TwitterInteractionClient {
                 state,
                 template: twitterCreateTokenResponseTemplate,
             });
-            
+
             const tokenResponse = await generateMessageResponse({
                 runtime: this.runtime,
                 context: tokenContext,
                 modelClass: ModelClass.MEDIUM,
             });
+
             elizaLogger.log("Token response", tokenResponse.text);
+            try {
+                elizaLogger.log(
+                    "Creating token body",
+                    JSON.stringify({
+                        isTwitter: true,
+                        twitterHandle: tweet.username,
+                        input: tokenResponse.text,
+                    })
+                );
+                const res = await fetch(
+                    "http://localhost:3000/api/memecoin/create-for-user",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            isTwitter: true,
+                            twitterHandle: tweet.username,
+                            input: tokenResponse.text,
+                        }),
+                    }
+                );
+
+                if (!res.ok) {
+                    tokenResponse.text = `Error creating token, please try again later`;
+                    await sendTweet(
+                        this.client,
+                        tokenResponse,
+                        message.roomId,
+                        this.client.twitterConfig.TWITTER_USERNAME,
+                        tweet.id
+                    );
+                    return { text: "Token response", action: "NONE" };
+                }
+
+                const tokenData = await res.json();
+                elizaLogger.log("Successfully created token");
+                elizaLogger.log("Token data", tokenData);
+                tokenResponse.text = `Hey @${tweet.username}, ${tokenResponse.text}, please visit ${tokenData.redirectUrl} to view your launched tokens`;
+                await sendTweet(
+                    this.client,
+                    tokenResponse,
+                    message.roomId,
+                    this.client.twitterConfig.TWITTER_USERNAME,
+                    tweet.id
+                );
+                return { text: "Token response", action: "NONE" };
+            } catch (error) {
+                elizaLogger.error("Error creating token:", error);
+            }
         }
 
         if (isBetRequestResponse === "RESPOND") {
@@ -656,7 +708,15 @@ export class TwitterInteractionClient {
                 );
 
                 if (!res.ok) {
-                    throw new Error(`Failed to create bet: ${res.statusText}`);
+                    betResponse.text = `Error creating bet, please try again later`;
+                    await sendTweet(
+                        this.client,
+                        betResponse,
+                        message.roomId,
+                        this.client.twitterConfig.TWITTER_USERNAME,
+                        tweet.id
+                    );
+                    return { text: "Bet response", action: "NONE" };
                 }
 
                 const betData = await res.json();
@@ -664,6 +724,15 @@ export class TwitterInteractionClient {
                 console.log("betData", betData);
                 // Store the bet URL for later use
                 state.betUrl = betData.redirectUrl;
+                betResponse.text = `Hey @${tweet.username}, bet created successfully! View and place your bet here: ${state.betUrl}`;
+                await sendTweet(
+                    this.client,
+                    betResponse,
+                    message.roomId,
+                    this.client.twitterConfig.TWITTER_USERNAME,
+                    tweet.id
+                );
+                return { text: "Bet response", action: "NONE" };
             } catch (error) {
                 elizaLogger.error("Error creating bet:", error);
             }
