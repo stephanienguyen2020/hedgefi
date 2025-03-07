@@ -194,11 +194,14 @@ export class DirectClient {
             "/:agentId/message",
             upload.single("file"),
             async (req: express.Request, res: express.Response) => {
+                elizaLogger.log("Req body:", req.body);
                 const agentId = req.params.agentId;
                 const roomId = stringToUuid(
                     req.body.roomId ?? "default-room-" + agentId
                 );
                 const userId = stringToUuid(req.body.userId ?? "user");
+
+                const userWalletId = req.body.userWalletId ?? "";
 
                 let runtime = this.agents.get(agentId);
 
@@ -257,6 +260,7 @@ export class DirectClient {
                     attachments,
                     source: "direct",
                     inReplyTo: undefined,
+                    userWalletId,
                 };
 
                 const userMessage = {
